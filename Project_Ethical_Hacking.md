@@ -1,7 +1,6 @@
 # Projet Ethical Hacking - LE SAOUT Milo - TRAN Nathan - FENOGLI Adrien
+---
 ![alt text](image-52.png)
-
-
 ---
 
 ## ⚠️ Avertissement : Usage exclusivement académique
@@ -38,13 +37,17 @@ En cherchent Jean JEAN EDF sur Facebook on arrive à trouver son profile :
 https://www.facebook.com/profile.php?id=61567259255621&sk=about_places&locale=fr_FR
 
 Jean suit la page Facebook d’un bar et a une photo de l’arc de triomphe, cela permet d’identifier son lieu de travail et un lieu qu’il fréquente régulièrement.
+
 ![alt text](image-50.png)
+
 ![alt text](image-49.png)
 
 On trouve sur sa page Facebook qu’il est récemment parti en voyage.
+
 ![alt text](image-48.png)
 
 En cherchant « Manta Queen 2 », on retrouve le site.
+
 ![alt text](image-47.png)
 
 Grâce à la date de naissance de son profil, on retrouve son compte Instagram :
@@ -52,6 +55,7 @@ Grâce à la date de naissance de son profil, on retrouve son compte Instagram :
 https://www.instagram.com/jeanjean280268/
 
 ![alt text](image-46.png)
+
 Ici on apprend qu’il a bien fait le voyage et qu’il en est revenu depuis peu.
 
 ### Active Reconnaissance : Utilisation d’outils comme nmap pour interagir directement avec la cible.
@@ -69,6 +73,7 @@ Cette version est vulnérable à une faille RCE permettant l'exécution de code 
 ## Phase 3 : Gaining Access - Exploiter les vulnérabilités découvertes pour accéder à un serveur ou à un système interne.
 
 On exploite cette vulnérabilité en lui faisant ouvrir un PDF malveillant grâce à un mail de Spears phishing sur le voyage qu’il a fait.
+
 ![alt text](image-45.png)
 
 Comme dit durant l’oral, nous n'avons pas réussi à recréer l’environnement à attaquer, mais en théorie, le PDF malveillant permet de créer une backdoor (maintaining access) et s'autodétruit (covering trace).
@@ -80,9 +85,11 @@ Comme dit durant l’oral, nous n'avons pas réussi à recréer l’environnemen
 En faisant suite à la phase 1 de la première partie, on peut donc supposer que nous sommes dans le même réseau que notre cible.
 
 En utilisant l’utilitaire nbtscan, on obtient donc l’adresse de notre machine cible.
+
 ![alt text](image-44.png)
 
 En faisant un scan nmap avec la commande `nmap -v –sV 192.168.195.133`, on va lister les services et les ports ouverts. On peut remarquer que le port SSH (22) est ouvert, nous allons donc utiliser ce dernier à notre avantage.
+
 ![alt text](image-43.png)
 
 ### Phase 3 : Gaining Access - Exploiter les vulnérabilités découvertes pour accéder à un serveur ou à un système interne.
@@ -94,17 +101,21 @@ L’idée était de trouver et d’utiliser un programme permettant de créer de
 Nous avons donc utilisé la commande `wister -w Jean jean jean68 68 27 28 20 . jeanjean gmail edf -c 1 2 -o userpasslistdemo.lst` pour créer notre dictionnaire de mots de passe où l’option `-w` permet de mettre des mots clés, `-c` correspond au nombre de combinaisons et `–o` correspond au fichier de sortie.
 
 ![alt text](image-42.png)
+
 Nous avons désormais deux choix : soit nous utilisons directement l’utilitaire Hydra pour réaliser notre attaque par dictionnaire, soit nous passons par le framework Metasploit pour chercher un script permettant de vérifier les combinaisons d’utilisateurs et de mots de passes qui réussissent.
 
 Dans notre cas, nous allons utiliser la méthode un peu plus traditionnelle avec Hydra. Nous allons donc utiliser la commande `hydra -L /home/endo/userpasslist.lst -P /home/endo/userpasslist.lst -t 4 -V ssh://192.168.195.133`. Cette commande va utiliser le contenu du fichier `userpasslist.lst` comme utilisateurs et mots de passe pour effectuer l’attaque par dictionnaire sur le service SSH (avec 4 processus parallèles).
+
 ![alt text](image-41.png)
 
 On peut donc remarquer que le login est JeanJean et le mot de passe est jean.jean68.
 
 Nous pouvons réaliser une première connexion initiale sur notre machine attaquante.
+
 ![alt text](image-40.png)
 
 En essayant la commande `ls`, nous pouvons voir que la commande n’est pas reconnue. Tandis que la commande `dir` fonctionne. Cela montre que nous sommes actuellement sous un interpréteur de commande en Batch et non en PowerShell. Nous pouvons toutefois lancer un terminal en PowerShell en allant dans le répertoire `C:\Windows\System32\WindowsPowershell\v1.0\` et en lançant l’exécutable `powershell.exe`.
+
 ![alt text](image-39.png)
 
 ## Phase 4 : Maintaining Access - Installer un accès persistant sur le système compromis pour y revenir plus tard.
@@ -210,15 +221,21 @@ Nous faisons donc la commande suivante : “scp MicrosoftEdgeUpdate.ps1 JeanJean
 Et celle-ci va placer notre script dans le répertoire System32 sous le nom MicrosoftEdgeUpdate.ps1 pour ne pas éveiller les soupçons, de plus que le répertoire System32 contient un grand nombre de fichier est d’exécutables ce qui rendra notre script plus difficile à localiser.
 
 ![alt text](image-38.png)
+
 ![alt text](image-37.png)
+
 Pour pouvoir exécuter le script, il nous faut d’abord désactiver les restrictions sur l’execution des scripts dans notre interpréteur, on peut donc faire la commande “Set-ExecutionPolicy unrestricted” puis .\MicrosoftEdgeUpdate.ps1
+
 ![alt text](image-36.png)
+
 Notre utilisateur a été créer et le script s’exécute périodiquement dans le cas où l’utilisateur n’existe plus à un moment où à un autre.
 
 On peut désormais se connecter sur notre compte discret :
 
 ![alt text](image-34.png)
+
 ![alt text](image-35.png)
+
 Un problème reste quand même présent, nous partons du principe que nous sommes au même endroit et dans le même réseau mais cela ne sera pas tout le temps le cas et en dehors du réseau, maintenir l’accès en ssh ne sera pas possible. Nous avons dans ce cas deux options : soit nous trouvons un moyen d’ouvrir les ports de la machine via le Fournisseur d’Accès Internet, ou bien, imaginons une sorte de mini programme ayant la même fonctionnalité que Tailscale mais plus discrète (sans icones de notification, interfaces graphique, etc...) pour créer un mini sous-réseau permettant de relier la machine cible de la machine attaquante, peu importe la distance. Cela permettrait de réellement mettre en place la Phase 4 : Maintaining access, malheureusement, réaliser un programme avec ces fonctionnalités est long et nous n’avons pas eu le temps de le réaliser. Peut-être que nous verrons un jour cela dans Kali Linux, qui sait...
 
 ## Phase 5 : Covering Tracks - Effacer les traces de l’intrusion pour éviter la détection par les administrateurs système.
